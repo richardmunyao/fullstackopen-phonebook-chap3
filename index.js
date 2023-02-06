@@ -1,12 +1,14 @@
-const express = require('express')
-const morgan = require('morgan')
-const cors = require('cors')
+const express = require('express') //server
+const morgan = require('morgan') //logging middleware
+const cors = require('cors') //allow cross origin resource sharing
 const app = express()
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, ()=> {
     console.log(`Server running on port: ${PORT}`)
 })
+
+const Person = require('./models/phonebook') //mongoDB model in separate module
 
 app.use(express.json())
 app.use(cors())
@@ -54,32 +56,34 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/persons', (request, response)=> {
-    response.json(persons)
+    Person.find({})
+        .then(persons => {
+            response.json(persons)
+        })
 })
 
 app.get('/info', (request, response)=> {
     const now = new Date().toString()
-    const numPersons = persons.length
-    response.send(`<p>Phonebook has info for ${numPersons} people</p>
-                    <p>${now}</p>`)    
+    Person.estimatedDocumentCount({})
+        .then(count => {            
+            response.send(`<p>Phonebook has info for ${count} people</p>
+                    <p>${now}</p>`)  
+        })         
 })
 
 app.get('/api/persons/:id', (request, response)=> {
-    const id = Number(request.params.id)
-    const person = persons.find( p => p.id === id)
-    console.log("person is:",person)
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).end() 
-    }
+    Person.findById(request.params.id)
+        .then(note => {
+            response.json(note)
+        })
 })
 
-app.delete('/api/persons/:id', (request, response)=> {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-    response.status(204).end()
-
+app.delete('/api/persons/:id', (request, response)=> {    
+    // response.status(204).end()
+    Person.findByIdAndDelete(request.params.id)
+        .then(person => {            
+            response.json(person)
+        })
 })
 
 app.post('/api/persons', (request, response)=> {
@@ -95,27 +99,22 @@ app.post('/api/persons', (request, response)=> {
         })
      }
      //check for duplicates
-     const nameExists = persons.find(person => person.name === body.name)
-     if (nameExists) {
-        return response.status(409).json ({
-            error: 'Conflict: name must be unique'
-        })
-     }
+    //  const nameExists = persons.find(person => person.name === body.name)
+    //  if (nameExists) {
+    //     return response.status(409).json ({
+    //         error: 'Conflict: name must be unique'
+    //     })
+    //  }
 
-     const newPerson = {
-        id: generateId(),
+     const newPerson = new Person({
         name: body.name,
-        number: body.number,
-     }   
+        number: body.number
+     })
 
-     persons = persons.concat(newPerson)
-     response.json(newPerson)
+     newPerson.save().then(savedPerson => {
+        response.json(savedPerson)
+     })
 })
-
-
-const generateId = () => {
-    return Math.floor(Math.random() * 99999)
-}
 
 
 //middleware to use if no route is found

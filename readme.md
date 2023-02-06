@@ -51,6 +51,8 @@ Important steps to go execute:
     3. In the backend's 'index.js', don't forget to do:
         >app.use(express.static('build'))
     4. deploy: 'fly deploy'
+    5. To troubleshoot problems: 
+        >fly doctor -a omitted
 
 10. To be able to work both locally and on deployed, add a proxy in the frontends's package.json like so:
     >"proxy" :"http://localhost:3001"
