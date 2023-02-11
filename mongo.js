@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 require('dotenv').config()
 
 if (process.argv.length < 3){
-    console.log("Did you forget to give password as a parameter?")
+    console.log('Did you forget to give password as a parameter?')
 }
 
 
@@ -36,9 +36,9 @@ if (process.argv.length === 5){
 }
 
 if (process.argv.length === 3){
-    console.log("phonebook:")
+    console.log('phonebook:')
     Person.find({}).then(result => {
-        result.forEach(person =>{
+        result.forEach(person => {
             console.log(person.name,' ',person.number)
         })
         mongoose.connection.close()
